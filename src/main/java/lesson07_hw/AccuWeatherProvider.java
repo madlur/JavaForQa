@@ -8,6 +8,7 @@ import okhttp3.Request;
 import okhttp3.Response;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.List;
 
 import static lesson07_hw.TemperatureConverter.FahrenheitCelsius;
@@ -23,8 +24,10 @@ public class AccuWeatherProvider implements WeatherProvider {
     private final OkHttpClient client = new OkHttpClient();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    DatabaseRepositorySQLiteImpl dbRepo = new DatabaseRepositorySQLiteImpl();
+
     @Override
-    public void getWeather(Periods periods) throws IOException {
+    public void getWeather(Periods periods, DatabaseRepository dbRepo) throws IOException, SQLException {
         String cityKey = detectCityKey();
         if (periods.equals(Periods.NOW)) {
             HttpUrl url = new HttpUrl.Builder()
@@ -62,6 +65,15 @@ public class AccuWeatherProvider implements WeatherProvider {
                     currentConditionResponse.getTemperature().getMetric().getValue(),
                     currentConditionResponse.getTemperature().getMetric().getUnit());
 
+            WeatherData weatherData = new WeatherData(
+                    ApplicationGlobalState.getInstance().getSelectedCity(),
+                    currentConditionResponse.getLocalObservationDateTime(),
+                    currentConditionResponse.getWeatherText(),
+                    currentConditionResponse.getTemperature().getMetric().getValue()
+            );
+
+            dbRepo.saveWeatherData(weatherData);
+
         } else if (periods.equals(Periods.FIVE_DAYS)) {
             HttpUrl url = new HttpUrl.Builder()
                     .scheme("http")
@@ -96,10 +108,25 @@ public class AccuWeatherProvider implements WeatherProvider {
                         dailyForecast.getNight().getIconPhrase(),
                         FahrenheitCelsius(temperature.getMinimum().getValue()),
                         FahrenheitCelsius(temperature.getMaximum().getValue()));
+                WeatherData weatherData = new WeatherData(
+                        ApplicationGlobalState.getInstance().getSelectedCity(),
+                        dailyForecast.getDate(),
+                        dailyForecast.getNight().getIconPhrase(),
+                        FahrenheitCelsius(temperature.getMaximum().getValue())
+                );
+
+                dbRepo.saveWeatherData(weatherData);
+
             }
             System.out.println();
+
         }
 
+
+    }
+
+    @Override
+    public void getWeather(Periods periods) throws IOException {
 
     }
 
