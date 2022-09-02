@@ -1,6 +1,7 @@
 package lesson07_hw;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.Scanner;
 
 public class UserInterface {
@@ -17,7 +18,8 @@ public class UserInterface {
 
             System.out.println("Введите ответ: 1 - Получить текущую погоду, " +
                     "2 - Получить погоду на следующие 5 дней, " +
-                    "выход (exit) - завершить работу");
+                    "3 - Получить погоду из базы данных" +
+                    "выход (exit) - завершить работу ");
             String result = scanner.nextLine();
 
             checkIsExit(result);
@@ -31,7 +33,7 @@ public class UserInterface {
 
             try {
                 notifyController(result);
-            } catch (IOException e) {
+            } catch (IOException | SQLException e) {
                 e.printStackTrace();
             }
 
@@ -62,7 +64,7 @@ public class UserInterface {
         }
     }
 
-    private void notifyController(String input) throws IOException {
+    private void notifyController(String input) throws IOException, SQLException {
         controller.onUserInput(input);
     }
 
